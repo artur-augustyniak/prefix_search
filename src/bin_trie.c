@@ -1,37 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <error.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-// gcc -std=c99 -Wextra -Wall -Wshadow -Wpointer-arith -Wcast-align  bin_trie.c && ./a.out
-// gcc -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment -std=c99 -Wextra -Wall -Wshadow -Wpointer-arith -Wcast-align  bin_trie.c && ./a.out
-// mips-linux-gnu-gcc bin_trie.c
-// ┌──(artur㉿kokopyc)-[~/Desktop/prefix_search/src]
-// └─$ qemu-mips -L /usr/mips-linux-gnu/ ./a.out
+#include "bin_trie.h"
 
 #define ERR_STATUS 1
 #define ERR_NUM 0
-
-typedef struct _BIN_TRIE_NODE
-{
-    bool is_prefix;
-    struct _BIN_TRIE_NODE *children[2];
-} PHX_BIN_TRIE_NODE_STRUCT, *PHX_BIN_TRIE_NODE;
 
 void PHX_abort(const char *file, unsigned int line, const char *msg)
 {
     error(ERR_STATUS, ERR_NUM, "file: %s:%d - %s", file, line, msg);
     abort();
 }
-
-// PHX_BIN_TRIE_NODE PHX_init_bin_trie_node();
 
 PHX_BIN_TRIE_NODE PHX_create_bin_trie_node()
 {
@@ -68,44 +44,18 @@ void PHX_destroy_bin_trie_node(PHX_BIN_TRIE_NODE n)
 
 uint32_t _PHX_get_ip_net(uint32_t base, uint8_t mask)
 {
-    return base &= ~((1 << (32 - mask)) - 1);
+    if (0 == mask)
+    {
+        return 0;
+    }
+    return base &= ~((1u << (32 - mask)) - 1);
 }
 
-void dump(PHX_BIN_TRIE_NODE trie_node)
-{
-    printf("%p is prefix? %d - children [0]%p [1]%p\n",
-           trie_node,
-           trie_node->is_prefix,
-           trie_node->children[0],
-           trie_node->children[1]);
-    if (NULL != trie_node->children[0])
-    {
-        dump(trie_node->children[0]);
-    }
-
-    if (NULL != trie_node->children[1])
-    {
-        dump(trie_node->children[1]);
-    }
-}
-
-/*
- * assuming user used ntohl
- */
 int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
 {
-    struct sockaddr_in antelope;
-    char *some_addr;
+
     uint32_t prefix = _PHX_get_ip_net(base, mask);
-    printf("prefix %u\n", prefix);
-    printf("prefix 0x%x\n", prefix);
-
-    antelope.sin_addr.s_addr = htonl(prefix);
-    some_addr = inet_ntoa(antelope.sin_addr); // return the IP
-    printf("%s\n", some_addr);                // prints "10.0.0.1"
-
     uint8_t prefix_bit = 31;
-
     while (prefix_bit > 31 - mask)
     {
         uint8_t curr_b = (prefix >> prefix_bit) & 1;
@@ -114,7 +64,6 @@ int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
             trie_root_node->children[curr_b] = PHX_create_bin_trie_node();
         }
         trie_root_node = trie_root_node->children[curr_b];
-        // printf("msb %d %d\n", prefix_bit, (prefix >> prefix_bit) & 1);
         prefix_bit--;
     }
     trie_root_node->is_prefix = true;
@@ -122,27 +71,84 @@ int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
     return 0;
 }
 
-// int main(int argc, char **argv)
-int main(void)
+PHX_BIN_TRIE_NODE _PHX_find_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
 {
-    PHX_BIN_TRIE_NODE trie_root_node = PHX_create_bin_trie_node();
 
-    struct sockaddr_in antelope;
-    inet_pton(AF_INET, "192.168.1.123", &antelope.sin_addr);
-    // uint32_t ip_int = htonl(antelope.sin_addr.s_addr);
-    uint32_t ip_int = ntohl(antelope.sin_addr.s_addr);
-    printf("ip uint %u\n", ip_int);
-    printf("ip uint 0x%x\n", ip_int);
-
-    int8_t res = PHX_add(trie_root_node, ip_int, 24);
-    if (-1 == res)
+    uint8_t prefix_bit = 31;
+    while (prefix_bit > 31 - mask)
     {
-        PHX_abort(
-            __FILE__,
-            __LINE__,
-            "trie insertion error, aborting");
+        uint8_t curr_b = (base >> prefix_bit) & 1;
+        if (NULL == trie_root_node->children[curr_b])
+        {
+            return NULL;
+        }
+        trie_root_node = trie_root_node->children[curr_b];
+        prefix_bit--;
     }
-    dump(trie_root_node);
-    PHX_destroy_bin_trie_node(trie_root_node);
-    return 0;
+    if (trie_root_node->is_prefix)
+    {
+        return trie_root_node;
+    }
+    return NULL;
+}
+
+int8_t PHX_check(PHX_BIN_TRIE_NODE trie_root_node, uint32_t ip)
+{
+    for (int8_t pref_len = 32; pref_len >= 0; pref_len--)
+    {
+        uint32_t base = _PHX_get_ip_net(ip, pref_len);
+        // printf("%d 0x%x 0x%x\n", pref_len, ip, base);
+        if (NULL != _PHX_find_prefix(trie_root_node, base, pref_len))
+        {
+            return pref_len;
+        }
+    }
+    return -1;
+}
+
+/**
+ * No prunning implemented, strategy is context dependant.
+ * i.e. tracking each deletion culd be not optimal in case of
+ * serioes of reocurring add/del of similar prefixes.
+ */
+bool _PHX_delete_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
+{
+    PHX_BIN_TRIE_NODE node = _PHX_find_prefix(trie_root_node, base, mask);
+    if (NULL != node)
+    {
+        node->is_prefix = false;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+int8_t PHX_del(PHX_BIN_TRIE_NODE trie_node, uint32_t base, uint8_t mask)
+{
+    uint32_t prefix = _PHX_get_ip_net(base, mask);
+    if (_PHX_delete_prefix(trie_node, prefix, mask))
+    {
+        return 1;
+    }
+    return -1;
+}
+
+void PHX_dump_trie(PHX_BIN_TRIE_NODE trie_node)
+{
+    printf("%p is prefix? %d - children [0]%p [1]%p\n",
+           trie_node,
+           trie_node->is_prefix,
+           trie_node->children[0],
+           trie_node->children[1]);
+    if (NULL != trie_node->children[0])
+    {
+        PHX_dump_trie(trie_node->children[0]);
+    }
+
+    if (NULL != trie_node->children[1])
+    {
+        PHX_dump_trie(trie_node->children[1]);
+    }
 }
