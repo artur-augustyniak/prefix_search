@@ -5,59 +5,50 @@
 #include <arpa/inet.h>
 #include "bin_trie.h"
 
-#define EX_NUM 3
-#define TEST_NUM 3
-#define DEL_NUM 1
+#define EX_NUM 8
+#define TEST_NUM 7
+#define DEL_NUM 5
 int main(void)
 {
 
     char *ex_prefixes[EX_NUM] = {
-        "192.168.1.123",
-        "192.168.1.123",
-        "192.168.1.123",
-        // "0.0.0.0",
-        // "255.255.255.255",
-        // "192.168.1.0",
-        // "192.168.1.0",
-        // "192.168.1.0",
-        // "192.168.2.0",
-        // "10.20.0.0",
-        // "10.20.0.0",
+        "255.255.255.255",
+        "192.168.1.0",
+        "192.168.1.0",
+        "192.168.1.0",
+        "192.168.2.0",
+        "10.20.0.0",
+        "10.20.0.0",
+        "0.0.0.0",
 
     };
 
     uint8_t ex_masks[EX_NUM] = {
-        17,
+        32,
+        0,
+        25,
+        24,
         16,
-        18,
-        // 0,
-        // 0,
-        // 25,
-        // 24,
-        // 16,
-        // 24,
-        // 16,
-        // 24
-
+        24,
+        16,
+        24,
     };
 
     char *ex_ips[TEST_NUM] = {
-        "192.168.127.255",
-        "192.168.128.255",
-        "192.168.63.255",
-
-        // "192.168.1.132",
-        // "192.168.1.127",
-        // "10.20.255.1",
-        // "10.20.0.15",
-        // "192.167.1.255",
-        // "255.255.255.255",
+        "255.255.255.255",
+        "192.168.1.7",
+        "192.168.1.127",
+        "192.168.2.132",
+        "192.168.1.132",
+        "10.20.255.1",
+        "10.20.0.15"
 
     };
 
     struct sockaddr_in saddr;
 
     PHX_BIN_TRIE_NODE trie_root_node = PHX_create_bin_trie_node();
+
     printf("[!] inserting test data...\n");
     for (u_int32_t i = 0; i < EX_NUM; i++)
     {
@@ -74,7 +65,7 @@ int main(void)
                 "trie insertion error, aborting");
         }
     }
-    PHX_dump_trie(trie_root_node);
+    // PHX_dump_trie(trie_root_node);
     printf("\n[!] testing...\n");
     for (int j = 0; j < TEST_NUM; j++)
     {
@@ -83,8 +74,8 @@ int main(void)
         int8_t res = PHX_check(trie_root_node, ip);
         printf("[*]ip addr:%s - mask %d\n", ex_ips[j], res);
     }
-
-    uint8_t idx_for_deletion[DEL_NUM] = {2};
+    
+    uint8_t idx_for_deletion[DEL_NUM] = {0, 7, 3, 5, 2};
     printf("\n[!] deleting...\n");
     for (int k = 0; k < DEL_NUM; k++)
     {
@@ -106,7 +97,7 @@ int main(void)
                 "trie deletion error, aborting");
         }
     }
-    PHX_dump_trie(trie_root_node);
+    // PHX_dump_trie(trie_root_node);
 
     printf("\n[!] testing again...\n");
     for (int j = 0; j < TEST_NUM; j++)

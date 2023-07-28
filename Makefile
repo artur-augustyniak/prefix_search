@@ -8,12 +8,12 @@ CC_OPTS=-O0 \
 		-Wpointer-arith \
 		-Wcast-align \
 		-fsanitize=address \
-		-fsanitize=undefined \
 		-fno-sanitize-recover=all \
 		-fsanitize=float-divide-by-zero \
 		-fsanitize=float-cast-overflow \
 		-fno-sanitize=null \
 		-fno-sanitize=alignment
+# -fsanitize=undefined \
 
 SRCDIR=src
 APPNAME = prefix

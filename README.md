@@ -1,14 +1,13 @@
-Komentarze:
+# Komentarze:
 - w przypadku api, zakładam, że konwersja `ntohl` jest po stronie usera,
 - zdaję sobię sprawę z faktu, że tak zaimplementowana struktura drzewiasta nie jest 'cache friendly',
   tu rozwiązaniem może być implementacja tablicowa, jednak nie będę ukrywał, że taka zajęłaby mi jeszcze jakiś czas,
 - pewnym już zależnym od kontekstu użycia ulepszeniem, mogłoby być użcie `arena allocator`, jeśli dealokacja następowałaby często
 - podobnie, w przypadku usuwania prefiksów, jedynie usuwam marker końca, w praktyce od kontekstu zależałoby, czy bardziej opłacalny byłby backtracking, prunning drzewa w jakiś specyficznycvh warunkach.
+- -fsanitize=undefined jest zakomentowany w Makefile, przez implementację, `_PHX_get_ip_net`, uint shift 32 jest w gcc UB, szczerze powiedziawszy, nie chcę już przedłużać tego zadania, więc zostawiam w ten sposób. To daje też jakiś pogląd o moich słabościach.
+- kod był uruchamiany na x86_64 i via qemu-mips, MIPS32 BE (komentarz w Makefile).
 
-
-
-
-Zadanie brzmi następująco:
+# Zadanie brzmi następująco:
  
 Proszę napisać implementację w języku C służącą do zarządzania zbiorem prefiksów IPv4.
 Prefiks określa zakres adresów wyrażony za pomocą wartości bazowej oraz maski,

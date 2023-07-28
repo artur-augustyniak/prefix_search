@@ -39,13 +39,14 @@ void PHX_destroy_bin_trie_node(PHX_BIN_TRIE_NODE n)
     free(n);
 }
 
+// supress # -fsanitize=undefined
 uint32_t _PHX_get_ip_net(uint32_t base, uint8_t mask)
 {
-    if (0 == mask)
+    if (32 == mask)
     {
-        return 0;
+        return base;
     }
-    return base &= ~((1u << (32 - mask)) - 1);
+    return base &= ~((1 << (32 - mask)) - 1);
 }
 
 int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
@@ -55,9 +56,10 @@ int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
         return -1;
     }
     uint32_t prefix = _PHX_get_ip_net(base, mask);
-    uint8_t prefix_bit = 31;
-    while (prefix_bit > 31 - mask)
+    int8_t prefix_bit = 31;
+    while (prefix_bit >= 32 - mask)
     {
+
         uint8_t curr_b = (prefix >> prefix_bit) & 1;
         if (NULL == trie_root_node->children[curr_b])
         {
@@ -74,9 +76,10 @@ int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
 PHX_BIN_TRIE_NODE _PHX_find_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
 {
 
-    uint8_t prefix_bit = 31;
-    while (prefix_bit > 31 - mask)
+    int8_t prefix_bit = 31;
+    while (prefix_bit >= 32 - mask)
     {
+
         uint8_t curr_b = (base >> prefix_bit) & 1;
         if (NULL == trie_root_node->children[curr_b])
         {
@@ -85,6 +88,7 @@ PHX_BIN_TRIE_NODE _PHX_find_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t ba
         trie_root_node = trie_root_node->children[curr_b];
         prefix_bit--;
     }
+
     if (trie_root_node->is_prefix)
     {
         return trie_root_node;
