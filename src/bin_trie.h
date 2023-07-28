@@ -19,19 +19,10 @@ PHX_BIN_TRIE_NODE PHX_create_bin_trie_node();
 
 void PHX_destroy_bin_trie_node(PHX_BIN_TRIE_NODE n);
 
-/*
- * assuming user used ntohl
- */
 int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask);
 
-/*
- * assuming user used ntohl
- */
 int8_t PHX_check(PHX_BIN_TRIE_NODE trie_root_node, uint32_t ip);
 
-/*
- * assuming user used ntohl
- */
 int8_t PHX_del(PHX_BIN_TRIE_NODE trie_node, uint32_t base, uint8_t mask);
 
 void PHX_dump_trie(PHX_BIN_TRIE_NODE trie_node);

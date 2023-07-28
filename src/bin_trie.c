@@ -11,8 +11,7 @@ void PHX_abort(const char *file, unsigned int line, const char *msg)
 
 PHX_BIN_TRIE_NODE PHX_create_bin_trie_node()
 {
-    // TODO - replace with arena allocation - for fast dealloc
-    // or implment btrie using an array - cache friendly
+
     PHX_BIN_TRIE_NODE n = (PHX_BIN_TRIE_NODE)malloc(sizeof(PHX_BIN_TRIE_NODE_STRUCT));
     if (NULL == n)
     {
@@ -29,8 +28,6 @@ PHX_BIN_TRIE_NODE PHX_create_bin_trie_node()
 
 void PHX_destroy_bin_trie_node(PHX_BIN_TRIE_NODE n)
 {
-    // TODO - replace with arena allocation - for fast dealloc
-    // or implment btrie using an array - cache friendly
     if (NULL != n->children[0])
     {
         PHX_destroy_bin_trie_node(n->children[0]);
@@ -53,7 +50,10 @@ uint32_t _PHX_get_ip_net(uint32_t base, uint8_t mask)
 
 int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
 {
-
+    if (32 < mask)
+    {
+        return -1;
+    }
     uint32_t prefix = _PHX_get_ip_net(base, mask);
     uint8_t prefix_bit = 31;
     while (prefix_bit > 31 - mask)
@@ -97,7 +97,6 @@ int8_t PHX_check(PHX_BIN_TRIE_NODE trie_root_node, uint32_t ip)
     for (int8_t pref_len = 32; pref_len >= 0; pref_len--)
     {
         uint32_t base = _PHX_get_ip_net(ip, pref_len);
-        // printf("%d 0x%x 0x%x\n", pref_len, ip, base);
         if (NULL != _PHX_find_prefix(trie_root_node, base, pref_len))
         {
             return pref_len;
@@ -106,11 +105,6 @@ int8_t PHX_check(PHX_BIN_TRIE_NODE trie_root_node, uint32_t ip)
     return -1;
 }
 
-/**
- * No prunning implemented, strategy is context dependant.
- * i.e. tracking each deletion culd be not optimal in case of
- * serioes of reocurring add/del of similar prefixes.
- */
 bool _PHX_delete_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
 {
     PHX_BIN_TRIE_NODE node = _PHX_find_prefix(trie_root_node, base, mask);

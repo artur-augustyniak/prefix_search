@@ -1,3 +1,13 @@
+Komentarze:
+- w przypadku api, zakładam, że konwersja `ntohl` jest po stronie usera,
+- zdaję sobię sprawę z faktu, że tak zaimplementowana struktura drzewiasta nie jest 'cache friendly',
+  tu rozwiązaniem może być implementacja tablicowa, jednak nie będę ukrywał, że taka zajęłaby mi jeszcze jakiś czas,
+- pewnym już zależnym od kontekstu użycia ulepszeniem, mogłoby być użcie `arena allocator`, jeśli dealokacja następowałaby często
+- podobnie, w przypadku usuwania prefiksów, jedynie usuwam marker końca, w praktyce od kontekstu zależałoby, czy bardziej opłacalny byłby backtracking, prunning drzewa w jakiś specyficznycvh warunkach.
+
+
+
+
 Zadanie brzmi następująco:
  
 Proszę napisać implementację w języku C służącą do zarządzania zbiorem prefiksów IPv4.
@@ -22,3 +32,4 @@ Całość rozwiązania powinna zostać zaimplementowana samodzielnie (łącznie 
 
 Implementacja powinna być przede wszystkim zwięzła, ale też estetyczna oraz czytelna. Kod powinien być przenośny (standard języka C).
  
+

@@ -5,11 +5,6 @@
 #include <arpa/inet.h>
 #include "bin_trie.h"
 
-/*
-gcc -O0 -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment -std=c99 -Wextra -Wall -Wshadow -Wpointer-arith -Wcast-align  bin_trie.c main.c && ./a.out
-mips-linux-gnu-gcc -std=c99 -Wall -Wextra -O0 main.c bin_trie.c &&  qemu-mips -L /usr/mips-linux-gnu/ ./a.out
-*/
-
 #define EX_NUM 3
 #define TEST_NUM 3
 #define DEL_NUM 1
