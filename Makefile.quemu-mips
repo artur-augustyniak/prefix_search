@@ -6,13 +6,7 @@ CC_OPTS=-O0 \
 		-Wall \
 		-Wshadow \
 		-Wpointer-arith \
-		-Wcast-align \
-		-fsanitize=undefined \
-		-fno-sanitize-recover=all \
-		-fsanitize=float-divide-by-zero \
-		-fsanitize=float-cast-overflow \
-		-fno-sanitize=null \
-		-fno-sanitize=alignment
+		-Wcast-align
 		
 
 SRCDIR=src

@@ -5,7 +5,9 @@
 
 void PHX_abort(const char *file, unsigned int line, const char *msg)
 {
-    error(1, 0, "file: %s:%d - %s", file, line, msg);
+    char str[80];
+    snprintf(str, 80, "file: %s:%d - %s", file, line, msg);
+    perror(msg);
     abort();
 }
 

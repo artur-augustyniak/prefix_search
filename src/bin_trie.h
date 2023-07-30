@@ -2,7 +2,6 @@
 #define PHX_BIN_TRIE_H
 
 #include <stdbool.h>
-#include <error.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <stdio.h>
