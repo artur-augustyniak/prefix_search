@@ -1,11 +1,11 @@
 #include "bin_trie.h"
 
-#define ERR_STATUS 1
-#define ERR_NUM 0
+#define IP_V4_MSB_IDX 31
+#define IP_V4_BIT_LEN 32
 
 void PHX_abort(const char *file, unsigned int line, const char *msg)
 {
-    error(ERR_STATUS, ERR_NUM, "file: %s:%d - %s", file, line, msg);
+    error(1, 0, "file: %s:%d - %s", file, line, msg);
     abort();
 }
 
@@ -26,111 +26,17 @@ PHX_BIN_TRIE_NODE PHX_create_bin_trie_node()
     return n;
 }
 
-void PHX_destroy_bin_trie_node(PHX_BIN_TRIE_NODE n)
+void PHX_destroy_bin_trie(PHX_BIN_TRIE_NODE trie_node)
 {
-    if (NULL != n->children[0])
+    if (NULL != trie_node->children[0])
     {
-        PHX_destroy_bin_trie_node(n->children[0]);
+        PHX_destroy_bin_trie(trie_node->children[0]);
     }
-    if (NULL != n->children[1])
+    if (NULL != trie_node->children[1])
     {
-        PHX_destroy_bin_trie_node(n->children[1]);
+        PHX_destroy_bin_trie(trie_node->children[1]);
     }
-    free(n);
-}
-
-// supress # -fsanitize=undefined
-uint32_t _PHX_get_ip_net(uint32_t base, uint8_t mask)
-{
-    if (32 == mask)
-    {
-        return base;
-    }
-    return base &= ~((1 << (32 - mask)) - 1);
-}
-
-int8_t PHX_add(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, uint8_t mask)
-{
-    if (32 < mask)
-    {
-        return -1;
-    }
-    uint32_t prefix = _PHX_get_ip_net(base, mask);
-    int8_t prefix_bit = 31;
-    while (prefix_bit >= 32 - mask)
-    {
-
-        uint8_t curr_b = (prefix >> prefix_bit) & 1;
-        if (NULL == trie_root_node->children[curr_b])
-        {
-            trie_root_node->children[curr_b] = PHX_create_bin_trie_node();
-        }
-        trie_root_node = trie_root_node->children[curr_b];
-        prefix_bit--;
-    }
-    trie_root_node->is_prefix = true;
-
-    return 0;
-}
-
-PHX_BIN_TRIE_NODE _PHX_find_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
-{
-
-    int8_t prefix_bit = 31;
-    while (prefix_bit >= 32 - mask)
-    {
-
-        uint8_t curr_b = (base >> prefix_bit) & 1;
-        if (NULL == trie_root_node->children[curr_b])
-        {
-            return NULL;
-        }
-        trie_root_node = trie_root_node->children[curr_b];
-        prefix_bit--;
-    }
-
-    if (trie_root_node->is_prefix)
-    {
-        return trie_root_node;
-    }
-    return NULL;
-}
-
-int8_t PHX_check(PHX_BIN_TRIE_NODE trie_root_node, uint32_t ip)
-{
-    for (int8_t pref_len = 32; pref_len >= 0; pref_len--)
-    {
-        uint32_t base = _PHX_get_ip_net(ip, pref_len);
-        if (NULL != _PHX_find_prefix(trie_root_node, base, pref_len))
-        {
-            return pref_len;
-        }
-    }
-    return -1;
-}
-
-bool _PHX_delete_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
-{
-    PHX_BIN_TRIE_NODE node = _PHX_find_prefix(trie_root_node, base, mask);
-    if (NULL != node)
-    {
-        node->is_prefix = false;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-int8_t PHX_del(PHX_BIN_TRIE_NODE trie_node, uint32_t base, uint8_t mask)
-{
-    uint32_t prefix = _PHX_get_ip_net(base, mask);
-    if (_PHX_delete_prefix(trie_node, prefix, mask))
-    {
-        return 1;
-    }
-    return -1;
+    free(trie_node);
 }
 
 void PHX_dump_trie(PHX_BIN_TRIE_NODE trie_node)
@@ -149,4 +55,92 @@ void PHX_dump_trie(PHX_BIN_TRIE_NODE trie_node)
     {
         PHX_dump_trie(trie_node->children[1]);
     }
+}
+
+PHX_BIN_TRIE_NODE _PHX_find_prefix(PHX_BIN_TRIE_NODE trie_root_node, uint32_t base, int8_t mask)
+{
+    int bit_idx = IP_V4_MSB_IDX;
+    while (bit_idx >= IP_V4_BIT_LEN - mask)
+    {
+        uint8_t curr_b = (base >> bit_idx) & 1;
+        if (NULL == trie_root_node->children[curr_b])
+        {
+            return NULL;
+        }
+        trie_root_node = trie_root_node->children[curr_b];
+        bit_idx--;
+    }
+    if (trie_root_node->is_prefix)
+    {
+        return trie_root_node;
+    }
+    return NULL;
+}
+
+int add(PHX_BIN_TRIE_NODE trie_node, int base, int mask)
+{
+
+    if (IP_V4_BIT_LEN < mask || 0 > mask)
+    {
+        return -1;
+    }
+
+    int bit_idx = IP_V4_MSB_IDX;
+    while (bit_idx >= IP_V4_BIT_LEN - mask)
+    {
+        int curr_b = (base >> bit_idx) & 1;
+        if (NULL == trie_node->children[curr_b])
+        {
+            trie_node->children[curr_b] = PHX_create_bin_trie_node();
+        }
+        trie_node = trie_node->children[curr_b];
+        bit_idx--;
+    }
+    trie_node->is_prefix = true;
+    return 0;
+}
+
+int check(PHX_BIN_TRIE_NODE trie_node, int ip)
+{
+    int longest_prefix_found = -1;
+    int bit_idx = IP_V4_MSB_IDX;
+    for (; bit_idx >= 0; bit_idx--)
+    {
+        int curr_bit = (ip >> bit_idx) & 1;
+        if (trie_node->is_prefix)
+        {
+            longest_prefix_found = IP_V4_MSB_IDX - bit_idx;
+        }
+        if (NULL == trie_node->children[curr_bit])
+        {
+            break;
+        }
+        trie_node = trie_node->children[curr_bit];
+    }
+
+    /**
+     * Root node always exists and carry no information about symbol
+     * If we've got 0 prefix, than it should only indicate that each ip match 0 mask
+     * Becouse of this, in case of full 32 prefix, we need to check leaf additionally
+     */
+    if (-1 == bit_idx && trie_node->is_prefix)
+    {
+        longest_prefix_found = IP_V4_BIT_LEN;
+    }
+
+    return longest_prefix_found;
+}
+
+int del(PHX_BIN_TRIE_NODE trie_node, int base, int mask)
+{
+    if (IP_V4_BIT_LEN < mask || 0 > mask)
+    {
+        return -1;
+    }
+    PHX_BIN_TRIE_NODE node = _PHX_find_prefix(trie_node, base, mask);
+    if (NULL != node)
+    {
+        node->is_prefix = false;
+    }
+    return 0;
 }

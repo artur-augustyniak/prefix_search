@@ -4,8 +4,7 @@
   tu rozwiązaniem może być implementacja tablicowa, jednak nie będę ukrywał, że taka zajęłaby mi jeszcze jakiś czas,
 - pewnym już zależnym od kontekstu użycia ulepszeniem, mogłoby być użcie `arena allocator`, jeśli dealokacja następowałaby często
 - podobnie, w przypadku usuwania prefiksów, jedynie usuwam marker końca, w praktyce od kontekstu zależałoby, czy bardziej opłacalny byłby backtracking, prunning drzewa w jakiś specyficznycvh warunkach.
-- -fsanitize=undefined jest zakomentowany w Makefile, przez implementację, `_PHX_get_ip_net`, uint shift 32 jest w gcc UB, szczerze powiedziawszy, nie chcę już przedłużać tego zadania, więc zostawiam w ten sposób. To daje też jakiś pogląd o moich słabościach.
-- kod był uruchamiany na x86_64 i via qemu-mips, MIPS32 BE (komentarz w Makefile).
+
 
 # Zadanie brzmi następująco:
  
@@ -17,10 +16,14 @@ a prefiks 32.64.128.0/20 oznacza zakres 32.64.128.0 - 32.64.143.255.
 
 Struktura danych powinna przechowywać arbitralnie duży zbiór prefiksów czyli par - baza IP (32 bity) i maska (wartości 0 - 32).
 Muszą zostać zaimplementowane następujące funkcje:
+
 int add(unsigned int base, char mask)
 Dodanie prefiksu do zbioru. Zwraca 0 lub -1 dla błędnych argumentów wywołania.
+
 int del(unsigned int base, char mask)
 Usunięcie prefiksu ze zbioru. Zwraca 0 lub -1 dla błędnych argumentów wywołania.
+
+
 char check(unsigned int ip)
 Sprawdzenie czy adres ip zawiera się w zbiorze prefiksów. Zwraca maskę najmniejszego prefiksu (o największej wartości maski) w zbiorze, który zawiera wskazany adres. Jeżeli ip nie zawiera się w zbiorze prefiksów zwraca -1.
 
@@ -31,4 +34,3 @@ Całość rozwiązania powinna zostać zaimplementowana samodzielnie (łącznie 
 
 Implementacja powinna być przede wszystkim zwięzła, ale też estetyczna oraz czytelna. Kod powinien być przenośny (standard języka C).
  
-
