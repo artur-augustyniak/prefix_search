@@ -4,6 +4,7 @@
   tu rozwiązaniem może być implementacja tablicowa, jednak nie będę ukrywał, że taka zajęłaby mi jeszcze jakiś czas,
 - pewnym już zależnym od kontekstu użycia ulepszeniem, mogłoby być użcie `arena allocator`, jeśli dealokacja następowałaby często
 - podobnie, w przypadku usuwania prefiksów, jedynie usuwam marker końca, w praktyce od kontekstu zależałoby, czy bardziej opłacalny byłby backtracking, prunning drzewa w jakiś specyficznycvh warunkach.
+- w projekcie jest także screenshot pokazujący uruchomienie zadania na Phoenix-RTOS (ia32-generic-qemu).
 
 
 # Zadanie brzmi następująco:
